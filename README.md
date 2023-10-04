@@ -1,3 +1,3 @@
 # monkey
 
-Monkey programming language from Writing an interpreter in Go and Writing a compiler in Go books.
+Personal implementation of the Monkey following the amazing book [Writing an interpreter in Go](https://interpreterbook.com/).
