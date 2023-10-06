@@ -29,5 +29,12 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
+	// Declares a new Program
+	program := &ast.Program{}
+	program.Statements = []ast.Statement{}
+
+	for p.currentToken.Type != token.EOF {
+		stmt := p.parse
+	}
 	return nil
 }

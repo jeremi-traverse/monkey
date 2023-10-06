@@ -37,8 +37,8 @@ func TestLetStatements(t *testing.T) {
 
 	for i, tt := range tests {
 		statement := program.Statements[i]
-		if statement != tt {
-
+		if !testLetStatement(t, statement, tt.expectedIdentifier) {
+			return
 		}
 	}
 }
@@ -46,7 +46,26 @@ func TestLetStatements(t *testing.T) {
 func testLetStatement(t *testing.T, s ast.Statement, expectedName string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral() not 'let'. got=%q", s.TokenLiteral())
+		return false
 	}
 
 	letStmt, ok := s.(*ast.LetStatement)
+
+	if !ok {
+		t.Errorf("Statement isn't a LetStatement. got=%T", s)
+		return false
+	}
+
+	if letStmt.Name.Value != expectedName {
+		t.Errorf("letStmt.Name not %q. got=%q", expectedName, letStmt.Name)
+		return false
+	}
+
+	if letStmt.Name.TokenLiteral() != expectedName {
+		t.Errorf("letStmt.Name.TokenLiteral() not %q. got=%q",
+			expectedName,
+			letStmt.Name.TokenLiteral())
+	}
+
+	return true
 }
