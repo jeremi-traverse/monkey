@@ -7,7 +7,7 @@ type Token struct {
 	Literal string // Lexer can be optimized by using an int/byte
 }
 
-var keywords = map[string]TokenType{
+var identKeywords = map[string]TokenType{
 	"fn":     FUNCTION,
 	"let":    LET,
 	"true":   TRUE,
@@ -19,7 +19,7 @@ var keywords = map[string]TokenType{
 
 // Check if identifier is a default keyword
 func LookupIdent(ident string) TokenType {
-	if tokenType, ok := keywords[ident]; ok {
+	if tokenType, ok := identKeywords[ident]; ok {
 		return tokenType
 	}
 

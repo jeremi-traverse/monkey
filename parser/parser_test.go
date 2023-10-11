@@ -13,11 +13,11 @@ func TestLetStatements(t *testing.T) {
 		let y = 10;
 		let foobar = 838383;
 	`
-
 	l := lexer.New(input)
 	p := New(l)
 
 	program := p.ParseProgram()
+	checkParserErrors(t, p)
 
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
@@ -30,6 +30,7 @@ func TestLetStatements(t *testing.T) {
 	tests := []struct {
 		expectedIdentifier string
 	}{
+
 		{"x"},
 		{"y"},
 		{"foobar"},
@@ -41,6 +42,53 @@ func TestLetStatements(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestReturnStatement(t *testing.T) {
+	input := `
+		return 10;
+		return y;
+		return 838383;
+	`
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("progam.Statements does not contain 3 statments. got %d", len(program.Statements))
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("expected Return Statement got %T", stmt)
+			continue
+		}
+
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("Expected token literal 'return' got %s instead",
+				returnStmt.TokenLiteral())
+		}
+	}
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	for _, msg := range errors {
+		t.Errorf("parser error: %s", msg)
+	}
+
+	t.FailNow()
 }
 
 func testLetStatement(t *testing.T, s ast.Statement, expectedName string) bool {
