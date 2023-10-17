@@ -28,13 +28,6 @@ type Program struct {
 }
 
 // Implements Statement interface
-// i.e. let x = 10 -> x is the identifier
-type Identifier struct {
-	Token token.Token
-	Value string
-}
-
-// Implements Statement interface
 type LetStatement struct {
 	Token token.Token
 	Name  *Identifier // Identifier of the binding (left part)
@@ -50,6 +43,11 @@ type ReturnStatement struct {
 type ExpressionStatement struct {
 	Token      token.Token // The first token of the expression
 	Expression Expression
+}
+
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
 }
 
 func (ls *LetStatement) statementNode()       {}
@@ -78,6 +76,10 @@ func (es *ExpressionStatement) String() string {
 	return ""
 }
 
+func (il *IntegerLiteral) expressionNode()      {}
+func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
+func (il *IntegerLiteral) String() string       { return il.Token.Literal }
+
 func (rs *ReturnStatement) statementNode()       {}
 func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
 func (rs *ReturnStatement) String() string {
@@ -94,7 +96,14 @@ func (rs *ReturnStatement) String() string {
 	return out.String()
 }
 
-func (i *Identifier) statementNode()       {}
+// Implements Statement interface
+// i.e. let x = 10 -> x is the identifier
+type Identifier struct {
+	Token token.Token
+	Value string
+}
+
+func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
 
