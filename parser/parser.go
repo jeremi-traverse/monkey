@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/jeremi-traverse/monkey/ast"
 	"github.com/jeremi-traverse/monkey/lexer"
@@ -40,6 +41,7 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
 	// Read two tokens, so currentToken and peekToken are both set
 	p.nextToken()
@@ -61,6 +63,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 		// Get the next statement
 		p.nextToken()
 	}
+	fmt.Println(program.Statements)
 	return program
 }
 
@@ -85,6 +88,7 @@ func (p *Parser) parseStatment() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
+		// 1 + 2 + 3
 		return p.parseExpressionStatement()
 	}
 }
@@ -141,6 +145,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.currentToken.Type]
 
 	if prefix == nil {
+		p.noPrefixFunctionFoundForTokenType(p.currentToken.Type)
 		return nil
 	}
 
@@ -171,6 +176,21 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 	return false
 }
 
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{Token: p.currentToken}
+
+	value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.currentToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	lit.Value = value
+
+	return lit
+}
+
 func (p *Parser) addPeekError(t token.TokenType) {
 	msg := fmt.Sprintf("expected token type %s, got %s instead",
 		t, p.peekToken.Type)
@@ -183,4 +203,9 @@ func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
 
 func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
+}
+
+func (p *Parser) noPrefixFunctionFoundForTokenType(tokenType token.TokenType) {
+	msg := fmt.Sprintf("No prefix function found for %s", tokenType)
+	p.errors = append(p.errors, msg)
 }
