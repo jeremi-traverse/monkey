@@ -25,6 +25,7 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
+// Precendes
 const (
 	_int = iota
 	LOWEST
@@ -42,6 +43,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
 	// Read two tokens, so currentToken and peekToken are both set
 	p.nextToken()
@@ -156,6 +159,20 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expr := &ast.PrefixExpression{
+		Token:    p.currentToken,
+		Operator: p.currentToken.Literal,
+	}
+	fmt.Print(p.currentToken.Literal)
+
+	p.nextToken()
+
+	expr.Right = p.parseExpression(PREFIX)
+
+	return expr
 }
 
 func (p *Parser) currentTokenIs(t token.TokenType) bool {
