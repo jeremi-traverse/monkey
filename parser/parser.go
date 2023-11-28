@@ -58,6 +58,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -174,35 +176,48 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 
-	leftExp := prefix()
+	exp := prefix()
 
 	for p.peekToken.Type != token.SEMICOLON && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
+		if infix == nil {
+			return exp
+		}
 
 		p.nextToken()
 
-		leftExp = infix(leftExp)
+		exp = infix(exp)
 	}
 
-	return leftExp
+	return exp
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
+// !true
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expr := &ast.PrefixExpression{
 		Token:    p.currentToken,
 		Operator: p.currentToken.Literal,
 	}
-	fmt.Print(p.currentToken.Literal)
 
 	p.nextToken()
 
 	expr.Right = p.parseExpression(PREFIX)
 
 	return expr
+}
+
+func (p *Parser) parseBoolean() ast.Expression {
+	fmt.Println(p.currentToken.Literal)
+	exp := &ast.Boolean{
+		Token: p.currentToken,
+		Value: p.currentTokenIs(p.currentToken.Type),
+	}
+	fmt.Println(exp.Token)
+	return exp
 }
 
 func (p *Parser) parseInfixExpression(leftExp ast.Expression) ast.Expression {

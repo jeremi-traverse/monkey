@@ -155,6 +155,15 @@ func (p *Program) TokenLiteral() string {
 	}
 }
 
+type Boolean struct {
+	Token token.Token
+	Value bool
+}
+
+func (i *Boolean) expressionNode()      {}
+func (i *Boolean) TokenLiteral() string { return i.Token.Literal }
+func (i *Boolean) String() string       { return i.Token.Literal }
+
 func (p *Program) String() string {
 	var out bytes.Buffer
 

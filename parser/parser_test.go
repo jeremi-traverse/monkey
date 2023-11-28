@@ -196,6 +196,38 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 }
 
+func TestBooleanExpression(t *testing.T) {
+	testCases := []struct {
+		input    string
+		expected bool
+	}{
+		{"true", true},
+		{"false", false},
+	}
+
+	for _, tc := range testCases {
+		l := lexer.New(tc.input)
+		p := New(l)
+
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program has not enough statements. got=%d",
+				len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not an ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		testLiteralExpression(t, stmt.Expression, tc.expected)
+	}
+}
+
 func TestParsingPrefixExpression(t *testing.T) {
 	prefixTests := []struct {
 		input        string
@@ -290,7 +322,7 @@ func TextComplexInfixExpression(t *testing.T) {
 		{"a + b - c", "(a + b) - c"},
 		{"a * b * c", "(a * b) * c"},
 		{"a + b / c", "a + (b / c)"},
-		{"a + b * c + d / e - f", "(((a + (b + c)) + (d / e)) - f)"},
+		{"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
 		{"3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"},
 		{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
 		{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
@@ -367,10 +399,32 @@ func testLiteralExpression(
 		return testInteger(t, int64(v), exp)
 	case string:
 		return testIdentifier(t, exp, v)
+	case bool:
+		return testBoolean(t, exp, v)
 	}
 
 	t.Fatalf("type of exp not handled, got=%T", exp)
 	return false
+}
+
+func testBoolean(t *testing.T, exp ast.Expression, value bool) bool {
+	boolean, ok := exp.(*ast.Boolean)
+	if !ok {
+		t.Errorf("expression not *ast.Boolean. got=%s", exp)
+		return false
+	}
+
+	if boolean.Value != value {
+		t.Errorf("exp value not=%t. got=%t", boolean.Value, value)
+		return false
+	}
+
+	if boolean.TokenLiteral() != fmt.Sprintf("%t", value) {
+		t.Errorf("Exp.TokenLiteral not=%t. got=%s", value, boolean.TokenLiteral())
+		return false
+	}
+
+	return true
 }
 
 func testInfixExpression(t *testing.T, exp ast.Expression, operator string,
